@@ -2,7 +2,7 @@ import { flow, identity, pipe } from 'fp-ts/function'
 import { assert } from '../../utils/run';
 import { parseBlocks } from '../../utils/parse';
 import { Arrays } from '../../utils/arrays';
-import { objects } from '../../utils/objects';
+import { Objects } from '../../utils/objects';
 
 type State = {
     files: Record<string, number>;
@@ -56,8 +56,8 @@ const parse = flow(
 function computeDirectoriesSize(state: State) {
     return state.dirs.map(dir => pipe(
         state.files,
-        objects.filter((_, name) => name.startsWith(dir+ '/')),
-        objects.values,
+        Objects.filter((_, name) => name.startsWith(dir+ '/')),
+        Objects.values,
         Arrays.sum
     ))
 }

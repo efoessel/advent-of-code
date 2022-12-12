@@ -68,7 +68,7 @@ export const Arrays = {
             map => Array.from(map.values())
         )
     },
-    pivotToMap<K, V, U, D extends boolean>(pivotedKeys: (elem: V, index: number, array: Readonly<V[]>) => K[], pivotedValue: (pivotedKeys: K, elem: V, index: number, array: Readonly<V[]>) => U, discardUndefined: D) {
+    pivotToMap<K, V, U, D extends boolean>(pivotedKeys: (elem: V, index: number, array: Readonly<V[]>) => readonly K[], pivotedValue: (pivotedKeys: K, elem: V, index: number, array: Readonly<V[]>) => U, discardUndefined: D) {
         type CoercedU = D extends true ? NonNullable<U> : U;
         return (arr: Readonly<V[]>) => {
             const map = new Map<K, CoercedU[]>();
@@ -87,7 +87,7 @@ export const Arrays = {
             return map as Map<K, CoercedU>;
         }
     },
-    pivot<K extends string|number, V, U, D extends boolean>(pivotedKeys: (elem: V, index: number, array: Readonly<V[]>) => K[], pivotedValue: (pivotedKeys: K, elem: V, index: number, array: Readonly<V[]>) => U, discardUndefined: D) {
+    pivot<K extends string|number, V, U, D extends boolean>(pivotedKeys: (elem: V, index: number, array: Readonly<V[]>) => readonly K[], pivotedValue: (pivotedKeys: K, elem: V, index: number, array: Readonly<V[]>) => U, discardUndefined: D) {
         return flow(
             Arrays.pivotToMap(pivotedKeys, pivotedValue, discardUndefined),
             map => Object.fromEntries(map.entries()) as unknown as Record<K, (D extends true ? NonNullable<U> : U)[]>,

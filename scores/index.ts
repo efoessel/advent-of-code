@@ -1,7 +1,7 @@
 import { flow, pipe } from 'fp-ts/function'
 import { run } from '../utils/run';
 import { Arrays } from '../utils/arrays';
-import { objects } from '../utils/objects';
+import { Objects } from '../utils/objects';
 import { castTo } from '../utils/parse';
 
 
@@ -22,9 +22,9 @@ type User = {
 
 const parse = flow(
     (s: string) => JSON.parse(s),
-    objects.pluck('members'),
+    Objects.pluck('members'),
     castTo<Record<string, User>>,
-    objects.mapKeys((user) => user.name),
+    Objects.mapKeys((user) => user.name),
 )
 
 function getStartTs(day: number) {
@@ -51,15 +51,15 @@ function parseDayResult(raw: RawDayResult, day: number) {
 
 const algo1 = flow(
     parse,
-    objects.map(user => pipe(user.completion_day_level,
-        objects.map((res, day) => parseDayResult(res!, parseInt(day))),
-        objects.values
+    Objects.map(user => pipe(user.completion_day_level,
+        Objects.map((res, day) => parseDayResult(res!, parseInt(day))),
+        Objects.values
     ))
 )
 
 const algo2 = (star: 1|2) => flow(
     parse,
-    objects.pivot(
+    Objects.pivot(
         user => Object.keys(user.completion_day_level),
         (key, user) => {
             const ts = user.completion_day_level[key]?.[star]?.get_star_ts;
@@ -70,7 +70,7 @@ const algo2 = (star: 1|2) => flow(
         },
         true
     ),
-    objects.map((val, day) => pipe(val,
+    Objects.map((val, day) => pipe(val,
         Arrays.sortNumbers('ASC', (v) => v.get_star_ts!),
         Arrays.map((user, i) => `${(i+1).toFixed(0).padStart(2)} - ${user.name.padEnd(20)} ${toReadableTime(user.get_star_ts!, parseInt(day))}`)
     ))

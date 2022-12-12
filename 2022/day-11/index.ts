@@ -3,7 +3,7 @@ import { assert, run } from '../../utils/run';
 import { Parse, parseBlocks } from '../../utils/parse';
 import { Arrays } from '../../utils/arrays';
 import { Arithmetics } from '../../utils/arithmetics';
-import { objects } from '../../utils/objects';
+import { Objects } from '../../utils/objects';
 
 type Monkey = {
     id: number,
@@ -63,7 +63,7 @@ const algo = (rounds: number, reliefMethodBuilder: (monkeys: Monkey[]) => ((worr
         const reliefMethod = reliefMethodBuilder(monkeys);
         return Arrays.range(0, rounds).flatMap(() => Arrays.range(0, monkeys.length)).reduce((monkeys, currentMonkeyIdx) => {
             const currentMonkey = monkeys[currentMonkeyIdx];
-            const moves = currentMonkey.items.reduce(moveOneItem(currentMonkey, reliefMethod), objects.map(() => [])(monkeys) as Record<string, number[]>);
+            const moves = currentMonkey.items.reduce(moveOneItem(currentMonkey, reliefMethod), Objects.fromArray(monkeys.map(() => [] as number[])));
             return monkeys.map(m => {
                 return m === currentMonkey
                     ? {
