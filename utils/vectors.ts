@@ -54,4 +54,7 @@ export namespace Vector {
     export function toString(a: Vector) {
         return a.join(',');
     }
+    export function equals(a: Vector, b: Vector) {
+        return a.length == b.length && a.every((ai, i) => ai === b[i]);
+    }
 }

@@ -15,10 +15,10 @@ export const Arrays = {
         return tab.reduce((s, v) => s + v, 0);
     },
     min(tab: Readonly<number[]>) {
-        return tab.reduce((s, v) => Math.min(s + v), Infinity);
+        return tab.reduce((s, v) => Math.min(s, v), Infinity);
     },
     max(tab: Readonly<number[]>) {
-        return tab.reduce((s, v) => Math.max(s + v), -Infinity);
+        return tab.reduce((s, v) => Math.max(s, v), -Infinity);
     },
     prod(tab: Readonly<number[]>) {
         return tab.reduce((s, v) => s * v, 1);
@@ -119,6 +119,11 @@ export const Arrays = {
     isSet<T>(array: Readonly<T[]>, equals: (a:T, b:T) => boolean = (a, b) => a===b) {
         return array.every((elem, i) => array.every((x, j) => j<=i || !equals(elem, x)));
     },
+    asSet<T>(array: Readonly<T[]>, equals?: (a:T, b:T) => boolean) {
+        return equals
+            ? array.filter((elem, i) => array.every((x, j) => j<=i || !equals(elem, x)))
+            : [...new Set(array)];
+    },
 
     
     // only returns a set if first array is a set
@@ -138,5 +143,8 @@ export const Arrays = {
     },
     range(from: number, to: number, step: number = from > to ? -1 : 1) {
         return Array.from({length: Math.floor((to - from)/step)}, (v, i) => from + i * step);
+    },
+    rangeI(from: number, to: number, step: number = from > to ? -1 : 1) {
+        return Array.from({length: Math.floor((to - from)/step)+1}, (v, i) => from + i * step);
     },
 }
