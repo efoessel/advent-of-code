@@ -34,9 +34,9 @@ export function findPath<S>(
         alive.push(...nextStates);
         
 
-        if(++cnt === 2000) {
+        /*if(++cnt === 2000) {
             cnt = 0;
             console.log(`findPath, ${alive.size()} alive, ${alreadySeen.size} visited, ${current.cost} minimum cost`);
-        }
+        }*/
     }
 }
