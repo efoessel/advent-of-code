@@ -69,7 +69,7 @@ function findReachable(blocked: Set<string>, maxY: number, start: Vector) {
         const nextLine = pipe(
             xs,
             Arrays.flatMap(x => ([x-1, x, x+1])),
-            Arrays.asSet,
+            Arrays.asSet(),
             Arrays.filter(x => !blocked.has([x, y+1].toString()))
         );
         return nextLine.length + findReachableInternal(y+1, nextLine);

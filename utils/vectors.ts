@@ -36,6 +36,9 @@ export namespace Vector {
     export function abs(a: Vector): Vector {
         return a.map((ai) => Math.abs(ai));
     }
+    export function manhattanDist(a: Vector, b: Vector): number {
+        return Vector.norm1(Vector.sub(a, b));
+    }
     export function norm1(a: Vector): number {
         return a.reduce((sum, ai) => sum + Math.abs(ai), 0);
     }

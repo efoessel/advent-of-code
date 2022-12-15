@@ -1,3 +1,5 @@
+import { Arrays } from './arrays';
+
 export class Interval {
     public readonly from: number;
     public readonly to: number;
@@ -32,6 +34,14 @@ export class Interval {
         const newTo = Math.min(this.to, range.to);
         if(newFrom > newTo) return undefined;
         else return new Interval(newFrom, newTo);
+    }
+
+    exclude(range: Interval) {
+        const reverse = [
+            new Interval(-Infinity, range.from - 1),
+            new Interval(range.to+1, Infinity),
+        ]
+        return Arrays.filterUndef(reverse.map(r => r.intersection(this)));
     }
 
     toString() {

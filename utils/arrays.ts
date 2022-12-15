@@ -11,6 +11,7 @@ export const Arrays = {
     filter<T>(fn: (elem: T, index: number, array: Readonly<T[]>) => boolean) {
         return (arr: Readonly<T[]>) => arr.filter(fn);
     },
+    filterUndef: <T>(arr: Readonly<T[]>) => arr.filter((x) => x !== undefined && x !== null) as NonNullable<T>[],
     sum(tab: Readonly<number[]>) {
         return tab.reduce((s, v) => s + v, 0);
     },
@@ -119,7 +120,7 @@ export const Arrays = {
     isSet<T>(array: Readonly<T[]>, equals: (a:T, b:T) => boolean = (a, b) => a===b) {
         return array.every((elem, i) => array.every((x, j) => j<=i || !equals(elem, x)));
     },
-    asSet<T>(array: Readonly<T[]>, equals?: (a:T, b:T) => boolean) {
+    asSet: <T>(equals?: (a:T, b:T) => boolean) => (array: Readonly<T[]>) => {
         return equals
             ? array.filter((elem, i) => array.every((x, j) => j<=i || !equals(elem, x)))
             : [...new Set(array)];
@@ -147,4 +148,12 @@ export const Arrays = {
     rangeI(from: number, to: number, step: number = from > to ? -1 : 1) {
         return Array.from({length: Math.floor((to - from)/step)+1}, (v, i) => from + i * step);
     },
+    getPairs: <T>(array: readonly T[]) => array.flatMap((e, i) => array.filter((f, j) => j > i).map(f => ([e, f] as const))),
+    partition: <T>(test: (elem: T, index: number, array: Readonly<T[]>) => boolean) => (array: Readonly<T[]>) => {
+        const forTrue: T[] = [], forFalse: T[] = [];
+        array.forEach((e, i) => (test(e, i, array) ? forTrue : forFalse).push(e));
+        return [forTrue, forFalse] as [readonly T[], readonly T[]];
+    },
+    combine: <T, U>([t, u]: [readonly T[], readonly U[]]) => t.flatMap(ti => u.map(ui => ([ti, ui] as const))),
+    find: <T>(test: (elem: T, index: number, array: Readonly<T[]>) => boolean) => (a: T[]) => a.find(test),
 }
