@@ -1,9 +1,9 @@
-import { flow, identity, pipe } from 'fp-ts/function'
-import { assert, run } from '../../utils/run';
+import { flow, identity } from 'fp-ts/function'
+import { assert } from '../../utils/run';
 import { Parse, parseBlocks } from '../../utils/parse';
 import { Arrays } from '../../utils/arrays';
 import { Arithmetics } from '../../utils/arithmetics';
-import { Objects } from '../../utils/objects';
+import { Sequence } from '../../utils/sequence';
 
 type Monkey = {
     id: number,
@@ -44,41 +44,26 @@ const parse = flow(
     }),
 );
 
-const moveOneItem = (currentMonkey: Monkey, reliefMethod: (worry: number) => number) => (moves: Record<string, number[]>, item: number) => {
-    const after = pipe(
-        item,
-        currentMonkey.operation,
-        reliefMethod,
-    );
-    const nextMonkeyId = after % currentMonkey.divisibleBy === 0 ? currentMonkey.ifTrue : currentMonkey.ifFalse
-    return {
-        ...moves,
-        [nextMonkeyId]: moves[nextMonkeyId].concat([after]),
-    };
-}
-
 const algo = (rounds: number, reliefMethodBuilder: (monkeys: Monkey[]) => ((worry: number) => number)) => flow(
     parse,
     (monkeys) => {
         const reliefMethod = reliefMethodBuilder(monkeys);
-        return Arrays.range(0, rounds).flatMap(() => Arrays.range(0, monkeys.length)).reduce((monkeys, currentMonkeyIdx) => {
-            const currentMonkey = monkeys[currentMonkeyIdx];
-            const moves = currentMonkey.items.reduce(moveOneItem(currentMonkey, reliefMethod), Objects.fromArray(monkeys.map(() => [] as number[])));
-            return monkeys.map(m => {
-                return m === currentMonkey
-                    ? {
-                        ...currentMonkey,
-                        cnt: currentMonkey.cnt + currentMonkey.items.length,
-                        items: []
-                    }
-                    : {
-                        ...m,
-                        items: m.items.concat(moves[m.id])
-                    };
-            });
-        }, monkeys);
+        const allItems = monkeys.flatMap((m, monkeyId) => m.items.map(item => ({monkeyId, item})));
+
+        return allItems.reduce((monkeyCnt, {monkeyId, item}) => {
+            return Sequence.loop().reduceUntil(({loopCnt}) => loopCnt>=rounds, ({monkeyCnt, monkeyId, item, loopCnt}) => {
+                const currentMonkey = monkeys[monkeyId];
+                const newWorry = reliefMethod(currentMonkey.operation(item));
+                const newMonkeyId = newWorry % currentMonkey.divisibleBy === 0 ? currentMonkey.ifTrue : currentMonkey.ifFalse;
+                return {
+                    monkeyCnt: [...monkeyCnt.slice(0, monkeyId), monkeyCnt[monkeyId] + 1, ...monkeyCnt.slice(monkeyId+1)],
+                    monkeyId: newMonkeyId,
+                    item: newWorry,
+                    loopCnt: loopCnt + (newMonkeyId > monkeyId ? 0 : 1),
+                };
+            }, {monkeyCnt, monkeyId, item, loopCnt: 0}).monkeyCnt;
+        }, monkeys.map(() => 0));
     },
-    Arrays.map(monkey => monkey.cnt),
     Arrays.sortNumbers('DESC', identity),
     (arr) => arr[0]*arr[1]
 );
