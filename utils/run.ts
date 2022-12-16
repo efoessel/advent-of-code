@@ -19,17 +19,18 @@ function toReadableTime(delay: number) {
         .join('') || '<1ms').padStart(8, ' ');
 }
 
-export function run(dirname: string, ...algos: ((input: string) => unknown)[]) {
-    algos.forEach((algo, step) => {
+export async function run(dirname: string, ...algos: ((input: string) => unknown)[]) {
+    for(let step = 1 ; step < algos.length+1 ; step++ ) {
+        const algo = algos[step-1];
         const data = readFile(dirname);
         const start = new Date().getTime();
         if(data.split('\n').pop() === '') {
             console.log(`\x1b[31mWarning, last line of input is empty !!!\x1b[0m`)
         }
-        const result = algo(data);
+        const result = await Promise.resolve(algo(data));
         const end = new Date().getTime();
-        console.log(`Step ${step+1}:`, result, toReadableTime(end - start));
-    });
+        console.log(`Step ${step}:`, result, toReadableTime(end - start));
+    }
     // keep running for ts-node-dev auto-restart
     setTimeout(() => console.log('auto-shutdown'), 1000000000);
 }
@@ -59,4 +60,6 @@ export function assert<T, U>(dirname: string, algo1: (input: string) => T, algo2
             })
         }
     }
+
+    setTimeout(() => console.log('auto-shutdown'), 1000000000);
 }
