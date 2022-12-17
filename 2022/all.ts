@@ -1,7 +1,4 @@
 import fs from 'fs';
 
-fs.readdirSync(__dirname).forEach((file) => {
-    import(`./${file}`);
-})
-
-setTimeout(() => console.log('auto-shutdown'), 1000000000);
+Promise.all(fs.readdirSync(__dirname).map((file) => import(`./${file}`)))
+.then(() => console.log('done.'));

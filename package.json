@@ -6,6 +6,7 @@
   "scripts": {
     "example": "ts-node-dev --rs ./today/day-xx/index.ts example",
     "real": "ts-node-dev --rs ./today/day-xx/index.ts real",
+    "trivial": "ts-node-dev --rs ./today/day-xx/index.ts trivial",
     "scores": "ts-node-dev --rs ./scores/index.ts score",
     "test": "ts-node-dev --rs ./2022/all.ts real"
   },

@@ -1,16 +1,10 @@
-import { flow, pipe } from 'fp-ts/lib/function';
+import { flow } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 import { Option } from 'fp-ts/lib/Option';
-import * as E from 'fp-ts/lib/Either';
-import { Either } from 'fp-ts/lib/Either';
-
-
 
 type mapFn<T, U> = (elem: T) => U;
 
 export class Sequence<T> {
-    public static STOP = {__STOP__: true};
-
     constructor(private it: () => Option<T>) {
     }
 
