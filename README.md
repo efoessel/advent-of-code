@@ -4,6 +4,12 @@ Typescript, mostly functional programming style.
 - Classes are allowed as long as they are only syntaxic sugar (no internal mutable state)
 - Non-functional mutable blobs are allowed only if enclosed in a single function that behaves functionally from outside.
 
+### the end of FP
+I don't have the libs for efficient immutable data structures...
+- day-12 => first use of dijkstra mutable blob
+- day-16 => DFS exploration could easily have been functional, but it would be 2x too long
+- day-17 => I don't even want to try to copy-on-write my Tetris arena and my pattern cache
+
 # Commands
 ## npm run example / npm run real
 
