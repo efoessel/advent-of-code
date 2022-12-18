@@ -1,4 +1,5 @@
 import { PriorityQueue } from './priority-queue';
+import { Sequence } from './sequence';
 
 type StateWithCost<S> = {
     cost: number,
@@ -39,4 +40,23 @@ export function findPath<S>(
             console.log(`findPath, ${alive.size()} alive, ${alreadySeen.size} visited, ${current.cost} minimum cost`);
         }*/
     }
+}
+
+export function findReachableNodes<S>(
+    start: S[], 
+    getNextStates: (from: S) => S[],
+    getKey: (s: S) => string
+) {
+    const alive = [...start];
+    const reachables: S[] = [];
+    const visited = new Set<string>(start.map(getKey));
+
+    while(alive.length > 0) {
+        const curr = alive.pop()!;
+        const next = getNextStates(curr).filter(n => !visited.has(getKey(n)));
+        next.forEach(n => visited.add(getKey(n))),
+        alive.push(...next);
+        reachables.push(curr);
+    }
+    return reachables;
 }

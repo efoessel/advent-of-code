@@ -46,7 +46,7 @@ export function assert<T, U>(dirname: string, algo1: (input: string) => T, algo2
     if(res1 === expected1 && res2 === expected2) {
         console.log(`\x1b[32m${dirname}\x1b[0m\t`, toReadableTime(after1 - start), toReadableTime(after2-after1));
     } else {
-        console.log(`\x1b[31m${dirname}\x1b[0m`);
+        console.log(`\x1b[31m${dirname}\x1b[0m`, toReadableTime(after1 - start), toReadableTime(after2-after1));
         if(res1 !== expected1) {
             console.log('On step 1:', {
                 got: res1,
