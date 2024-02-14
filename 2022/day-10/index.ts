@@ -1,8 +1,6 @@
-import { flow, identity, pipe } from 'fp-ts/function'
-import { assert, run } from '../../utils/run';
-import { basicParseInt, castTo, parseBlocks } from '../../utils/parse';
-import { Arrays } from '../../utils/arrays';
-import { Objects } from '../../utils/objects';
+import { flow, identity } from 'fp-ts/function'
+import { runStep } from '../../utils/run';
+import { Arrays, parseBlocks } from '../../utils/@index';
 
 const parse = flow(
     parseBlocks('\n', identity),
@@ -24,23 +22,30 @@ const computeXValuesAtStart = Arrays.reduceAndRemember((x, instruction: string) 
 const algo1 = flow(
     parse,
     computeXValuesAtStart,
-    Objects.pluck('all'),
-    Arrays.map((x, i) => i%40 === 19 ? x*(i+1) :  0),
+    Arrays.map((x, i) => i%40 === 19 ? x*(i+1) : 0),
     Arrays.sum
 );
 
 const algo2 = flow(
     parse,
     computeXValuesAtStart,
-    Objects.pluck('all'),
     Arrays.map((x, i) => Math.abs(i%40 - x)<=1 ? '█' : ' '),
     (sprite) => '\n'+sprite.join('').match(/.{40}/g)?.join('\n')
 );
 
-assert(__dirname, algo1, algo2, [12540, `
+runStep(__dirname, 'step1', 'example', algo1, 13140);
+runStep(__dirname, 'step1', 'real', algo1, 12540);
+runStep(__dirname, 'step2', 'example', algo2, `
+██  ██  ██  ██  ██  ██  ██  ██  ██  ██  
+███   ███   ███   ███   ███   ███   ███ 
+████    ████    ████    ████    ████    
+█████     █████     █████     █████     
+██████      ██████      ██████      ████
+███████       ███████       ███████     `);
+runStep(__dirname, 'step2', 'real', algo2, `
 ████ ████  ██  ████ ████ █    █  █ ████ 
 █    █    █  █    █ █    █    █  █ █    
 ███  ███  █      █  ███  █    ████ ███  
 █    █    █     █   █    █    █  █ █    
 █    █    █  █ █    █    █    █  █ █    
-█    ████  ██  ████ ████ ████ █  █ ████ `]);
+█    ████  ██  ████ ████ ████ █  █ ████ `);

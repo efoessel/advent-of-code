@@ -1,8 +1,6 @@
 import { flow, identity } from 'fp-ts/function'
-import { assert } from '../../utils/run';
-import { parseBlocks } from '../../utils/parse';
-import { Arrays } from '../../utils/arrays';
-import { findPath } from '../../utils/path-finder';
+import { runStep } from '../../utils/run';
+import { Arrays, findPath, parseBlocks } from '../../utils/@index';
 
 type FullGraph =  Record<string, {flow: number, dests: string[]}>;
 type SimplifiedGraph = { flow: number, dests: number[]}[];
@@ -23,7 +21,7 @@ const parse = flow(
 );
 
 // gets the distance between two rooms from the full graph
-const getCostToMove = (graph: FullGraph, source: string, dest: string) =>  findPath(
+const getCostToMove = (graph: FullGraph, source: string, dest: string) => findPath(
     [{state: source, cost: 0}],
     [dest],
     (from) => graph[from.state].dests.map(x => ({ state:x , cost: from.cost+1})),
@@ -41,7 +39,7 @@ const simplifyGraph = (graph: FullGraph) => {
 
 // find the best possible score. could easily be done functional, but takes ~2x more time to execute :(
 export const explore = (g: SimplifiedGraph) => {
-    let nbNodes = g.length;
+    const nbNodes = g.length;
 
     return function exploreInternal(time: number, pos: number, explored: number): number {
         let best = 0;
@@ -75,4 +73,7 @@ const algo2 = flow(
     }
 );
 
-assert(__dirname, algo1, algo2, [1862, 2422]);
+runStep(__dirname, 'step1', 'example', algo1, 1651);
+runStep(__dirname, 'step1', 'real', algo1, 1862);
+runStep(__dirname, 'step2', 'example', algo2, 1707);
+runStep(__dirname, 'step2', 'real', algo2, 2422, true);

@@ -1,11 +1,10 @@
-import { flow, identity, pipe } from 'fp-ts/function'
+import { flow} from 'fp-ts/function'
 import { run } from '../../utils/run';
-import { basicParseInt, castTo, parseBlocks } from '../../utils/parse';
+import { basicParseInt, parseBlocks } from '../../utils/parse';
 import { Arrays } from '../../utils/arrays';
 import { Objects } from '../../utils/objects';
-import { Grid } from '../../utils/grid';
+import { Grid } from '../../utils/poubelle/grid';
 import { findPath } from '../../utils/path-finder';
-import { number } from 'fp-ts';
 
 const parse = flow(
     parseBlocks('\n', parseBlocks(',', basicParseInt)),
@@ -16,11 +15,6 @@ type S = {
     y: number,
     p?: S,
 }
-
-const tap = <T>(fn: (val: T) => void) => (val: T) => {
-    fn(val);
-    return val;
-} 
 
 const algo81 = flow(
     parse,

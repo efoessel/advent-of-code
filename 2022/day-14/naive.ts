@@ -1,9 +1,6 @@
 import { flow } from 'fp-ts/function'
-import { assert } from '../../utils/run';
-import { Parse, parseBlocks } from '../../utils/parse';
-import { Arrays } from '../../utils/arrays';
-import { Grid } from '../../utils/grid';
-import { Vector } from '../../utils/vectors';
+import { runStep } from '../../utils/run';
+import { Arrays, Grid, Parse, Vector, parseBlocks } from '../../utils/@index';
 
 
 const parse = flow(
@@ -44,9 +41,9 @@ const parse = flow(
 
 function dropSand(grid: Grid<string>, where: number) {
     let ptr = {x: where, y: 0};
-    while(true){
-        let options = grid.getNeighbors(ptr, 'down', 'down-left', 'down-right'); // we are lucky getNeighbors gets them in the right order
-        let chosen = options.find(opt => opt.value === ' ');
+    for(;;){
+        const options = grid.getNeighbors(ptr, 'down', 'down-left', 'down-right'); // we are lucky getNeighbors gets them in the right order
+        const chosen = options.find(opt => opt.value === ' ');
         if(chosen === undefined) return ptr;
         ptr = chosen;
     }
@@ -78,4 +75,7 @@ const algo2 = flow(
     },
 );
 
-assert(__dirname, algo1, algo2, [843, 27625]);
+runStep(__dirname, 'step1', 'example', algo1, 24);
+runStep(__dirname, 'step1', 'real', algo1, 843);
+runStep(__dirname, 'step2', 'example', algo2, 93);
+runStep(__dirname, 'step2', 'real', algo2, 27625);

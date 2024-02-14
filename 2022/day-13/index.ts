@@ -1,7 +1,6 @@
 import { flow, identity } from 'fp-ts/function'
-import { assert } from '../../utils/run';
-import { parseBlocks } from '../../utils/parse';
-import { Arrays } from '../../utils/arrays';
+import { runStep } from '../../utils/run';
+import { Arrays, parseBlocks } from '../../utils/@index';
 
 type Packet = number | (number|Packet)[];
 
@@ -49,4 +48,7 @@ const algo2 = flow(
     (arr) => (arr.indexOf(START_DIV)+1)*(arr.indexOf(END_DIV)+1),
 );
 
-assert(__dirname, algo1, algo2, [5905, 21691]);
+runStep(__dirname, 'step1', 'example', algo1, 13);
+runStep(__dirname, 'step1', 'real', algo1, 5905);
+runStep(__dirname, 'step2', 'example', algo2, 140);
+runStep(__dirname, 'step2', 'real', algo2, 21691);

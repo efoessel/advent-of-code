@@ -1,24 +1,25 @@
 import { flow } from 'fp-ts/function'
-import { Interval } from '../../utils/interval';
-import { assert } from '../../utils/run';
-import { basicParseInt, parseBlocks } from '../../utils/parse';
-import { Arrays } from '../../utils/arrays';
+import { runStep } from '../../utils/run';
+import { Arrays, Intervals, Parse, parseBlocks } from '../../utils/@index';
 
 const parse = flow(
     parseBlocks('\n', parseBlocks(',', flow(
-        parseBlocks('-', basicParseInt),
-        ([f, t]) => new Interval(f, t)
+        parseBlocks('-', Parse.extractInt),
+        ([f, t]) => Intervals.fromIntegersIncluded(f, t)
     ))),
 );
 
 const algo1 = flow(
     parse,
-    Arrays.count(([a, b]) => a.containedIn(b) || b.containedIn(a)),
+    Arrays.count(([a, b]) => Intervals.contains(a)(b) || Intervals.contains(b)(a)),
 );
 
 const algo2 = flow(
     parse,
-    Arrays.count(([a, b]) => a.overlaps(b)),
+    Arrays.count(([a, b]) => Intervals.intersects(a)(b)),
 );
 
-assert(__dirname, algo1, algo2, [305, 811]);
+runStep(__dirname, 'step1', 'example', algo1, 2);
+runStep(__dirname, 'step1', 'real', algo1, 305);
+runStep(__dirname, 'step2', 'example', algo2, 4);
+runStep(__dirname, 'step2', 'real', algo2, 811);

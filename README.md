@@ -1,37 +1,35 @@
 # Advent of code
-## 2022
+
 Typescript, mostly functional programming style.
 - Classes are allowed as long as they are only syntaxic sugar (no internal mutable state)
 - Non-functional mutable blobs are allowed only if enclosed in a single function that behaves functionally from outside.
 
-### the end of FP
-I don't have the libs for efficient immutable data structures...
-- day-12 => first use of dijkstra mutable blob
-- day-16 => DFS exploration could easily have been functional, but it would be 2x too long
-- day-17 => I don't even want to try to copy-on-write my Tetris arena and my pattern cache
+Exceptions to functional programming are mostly related to performance issue where copy-on-write would be catastrophic without very sophisticated data structures (path traversal with visited tracking, explore all small variations of a data structure...)
 
 # Commands
 ## npm run example / npm run real
 
-Runs the `today` file on example or real data.  
-Watches any change & re-run the algo on save.  
-Main speed-run commands
+Runs the `run/index.ts` file on example or real data, watches any change & re-run the algo on save.  
+What exactly is run depends on the content of the file, it contains what is required to easily run a day / a year.
+Trying to run a day that doesn't exist will create the daily directory with empty inputs & template ts.
 
-## npm test
+For now, each year run in a few tens of seconds.
+
+## npm lint
 
 Runs all 'archived' days (year is hardcoded)  
 Watches changes & re-run all on save.  
 Intended for non-regression when updating the libs
 
-## npm run scores
-Requires the /scores/score-data file to contain the json from the aoc API (https://adventofcode.com/${year}/leaderboard/private/view/${leaderBoardId}.json).  
-Prints:
-- the time each user required to finish each day's problem
-- the ranking for each day for the first star & the time required by each user
-- the ranking for each day for the second star & the time required by each user
+# Requirement
 
-## ts-node ./any/file/dot.ts -- blah
+Puzzle inputs are not in the repo, as per the author's request.  
+To work, each day must have its files for examples and / or real puzzle.  
+Never keep an empty line at the end of the input (there should be a warning when it happens)
 
-Runs the file (obviously)  
-If you use the assert or run method, the data used will be from the `blah-data` file  
-May be useful to run some other tests
+Examples are usually the main example from the puzzle description, or several when applicable.  
+Base name is usually example-data, but it may be example1-data or similar (the 3rd param of runStep is whatever is expected before the '-data')  
+It should be reasonably easy to guess which input is expected in which file.  
+Sometimes, they may be example that I manually crafted to test (that you can't easily reproduce)
+
+Real input are always named 'real-data'. You should copy-paste your input there.

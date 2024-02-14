@@ -1,20 +1,22 @@
 {
-  "name": "aoc-2022",
+  "name": "aoc",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.ts",
+  "description": "Advent of code solved by myself in kinda functional typescript, but not completely",
   "scripts": {
-    "example": "ts-node-dev --rs ./today/day-xx/index.ts example",
-    "real": "ts-node-dev --rs ./today/day-xx/index.ts real",
-    "trivial": "ts-node-dev --rs ./today/day-xx/index.ts trivial",
-    "scores": "ts-node-dev --rs ./scores/index.ts score",
-    "test": "ts-node-dev --rs ./2022/all.ts real"
+    "example": "ts-node-dev --rs ./run/index.ts example",
+    "real": "ts-node-dev --rs ./run/index.ts real",
+    "lint": "eslint ."
   },
   "author": "efoessel",
   "license": "ISC",
   "dependencies": {
     "fp-ts": "^2.13.1",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^4.9.3"
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.56.0"
   }
 }

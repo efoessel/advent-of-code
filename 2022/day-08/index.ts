@@ -1,22 +1,21 @@
 import { flow, pipe } from 'fp-ts/function'
-import { assert } from '../../utils/run';
-import { basicParseInt, parseBlocks } from '../../utils/parse';
-import { Arrays } from '../../utils/arrays';
-import { Grid } from '../../utils/grid';
+import { runStep } from '../../utils/run';
+import { Arrays, DIRECTIONS, Matrices, Strings, basicParseInt } from '../../utils/@index';
 
 const parse = flow(
-    parseBlocks('\n', parseBlocks('', basicParseInt)),
-    grid => new Grid(grid, false),
+    Strings.split('\n'),
+    Arrays.map(Strings.split('')),
+    Matrices.map(basicParseInt),
 );
 
 const algo1 = flow(
     parse,
-    (grid) => grid.filter((val, p) => {
-        return pipe(Grid.SIDES,
-            Arrays.map(dir => grid.getCellsInDirection(p, dir).map(c => c.value)),
-            Arrays.some(arr => arr.every(t => t < val))
-        )
-    }).length,
+    grid => pipe(grid,
+        Matrices.filter((val, p) => pipe(DIRECTIONS,
+            Arrays.some(d => Matrices.getValuesInDirection(grid)(p, d).every(t => t < val)),
+        )),
+    ),
+    Arrays.length
 );
 
 function score(tree: number, direction: number[]) {
@@ -27,15 +26,19 @@ function score(tree: number, direction: number[]) {
 
 const algo2 = flow(
     parse,
-    (grid) => grid.map((val, p) => {
-        return pipe(Grid.SIDES,
-            Arrays.map(dir => grid.getCellsInDirection(p, dir).map(c => c.value)),
-            Arrays.map(score.bind(null, val)),
+    grid => pipe(grid,
+        Matrices.map((val, p) => pipe(DIRECTIONS,
+            Arrays.map(d => Matrices.getValuesInDirection(grid)(p, d)),
+            Arrays.map(line => score(val, line)),
             Arrays.prod
-        )
-    })
-    .reduce((max, v) => Math.max(max, v), -Infinity)
+        )),
+    ),
+    Arrays.map(Arrays.max),
+    Arrays.max
 );
 
 
-assert(__dirname, algo1, algo2, [1818, 368368]);
+runStep(__dirname, 'step1', 'example', algo1, 21);
+runStep(__dirname, 'step1', 'real', algo1, 1818);
+runStep(__dirname, 'step2', 'example', algo2, 8);
+runStep(__dirname, 'step2', 'real', algo2, 368368);

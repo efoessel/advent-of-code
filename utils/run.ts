@@ -2,9 +2,17 @@
 import fs from 'fs';
 import path from 'path';
 import { Arrays } from './arrays';
+import { resetMemoStats } from './memo';
 
-function readFile(dirname: string) {
-    const fileStr = fs.readFileSync(path.join(dirname, process.argv[2] + '-data'), {
+setInterval(() => console.log('tic-tac'), 1000000000);
+
+let skipLongValue = false;
+export function skipLong() {
+    skipLongValue = true;
+}
+
+function readFile(dirname: string, file: string) {
+    const fileStr = fs.readFileSync(path.join(dirname, file + '-data'), {
         encoding: 'utf-8',
     });
     return fileStr;
@@ -12,7 +20,7 @@ function readFile(dirname: string) {
 
 function toReadableTime(delay: number) {
     const split = [24, 60, 60, 1000].reduceRight(([curr, ...rest], s) => ([Math.floor(curr/s), curr%s , ...rest]), [delay]);
-    return (Arrays.zip(split, ['j', 'h', 'm', 's', 'ms'])
+    return (Arrays.zip([split, ['j', 'h', 'm', 's', 'ms']])
         .filter(([v]) => v !== 0)
         .slice(0, 2)
         .map(a => a.join(''))
@@ -22,10 +30,10 @@ function toReadableTime(delay: number) {
 export async function run(dirname: string, ...algos: ((input: string) => unknown)[]) {
     for(let step = 1 ; step < algos.length+1 ; step++ ) {
         const algo = algos[step-1];
-        const data = readFile(dirname);
+        const data = readFile(dirname, process.argv[2]);
         const start = new Date().getTime();
         if(data.split('\n').pop() === '') {
-            console.log(`\x1b[31mWarning, last line of input is empty !!!\x1b[0m`)
+            console.log(`\x1b[33mWarning, last line of input is empty !!!\x1b[0m`)
         }
         const result = await Promise.resolve(algo(data));
         const end = new Date().getTime();
@@ -35,31 +43,91 @@ export async function run(dirname: string, ...algos: ((input: string) => unknown
     setTimeout(() => console.log('auto-shutdown'), 1000000000);
 }
 
-export function assert<T, U>(dirname: string, algo1: (input: string) => T, algo2: (input: string) => U, [expected1, expected2]: [T, U]) {
-    const data = readFile(dirname);
+function expandName(n: string) {
+    const root = path.join(__dirname, '..');
+    if(n.startsWith('@/')) return n.replace('@', root);
+    return n;
+}
+
+export async function runAll(dirname: string | string[]) {
     const start = new Date().getTime();
-    const res1 = algo1(data);
-    const after1 = new Date().getTime();
-    const res2 = algo2(data);
-    const after2 = new Date().getTime();
-    
-    if(res1 === expected1 && res2 === expected2) {
-        console.log(`\x1b[32m${dirname}\x1b[0m\t`, toReadableTime(after1 - start), toReadableTime(after2-after1));
-    } else {
-        console.log(`\x1b[31m${dirname}\x1b[0m`, toReadableTime(after1 - start), toReadableTime(after2-after1));
-        if(res1 !== expected1) {
-            console.log('On step 1:', {
-                got: res1,
-                expected: expected1,
-            })
+
+    if(Array.isArray(dirname)) {
+        for(const dir of dirname) {
+            await runAll(dir);
         }
-        if(res2 !== expected2) {
-            console.log('On step 2:', {
-                got: res2,
-                expected: expected2,
-            })
+    } else {
+        dirname = expandName(dirname);
+
+        if(!fs.lstatSync(dirname).isDirectory()) {
+            console.log(`\x1b[33m${dirname} skipped: not a directory\x1b[0m\t`);
+            return;
+        }
+
+        for(const file of fs.readdirSync(dirname)) {
+            if(fs.existsSync(path.join(dirname, file, 'index.ts'))) {
+                await import(path.join(dirname, file));
+            } else {
+                await runAll(path.join(dirname, file));
+            }
         }
     }
 
-    setTimeout(() => console.log('auto-shutdown'), 1000000000);
+    const after = new Date().getTime();
+    console.log(dirname, toReadableTime(after - start))
+}
+
+export async function createAndRun(dirName: string) {
+    dirName = expandName(dirName);
+    if(!fs.existsSync(dirName)) {
+        console.log('Creating base for', dirName);
+        fs.mkdirSync(dirName);
+        fs.copyFileSync(path.join(__dirname, '../run/template/template.ts'), path.join(dirName, 'index.ts'));
+        fs.closeSync(fs.openSync(path.join(dirName, 'example-data'), 'w'));
+        fs.closeSync(fs.openSync(path.join(dirName, 'real-data'), 'w'));
+    }
+    await import(dirName);
+}
+
+export function runStep(dirname: string, label: string, inputData: string, algo: (input: string) => unknown, expected: unknown, long = false) {
+    if(!inputData.includes(process.argv[2])) return;
+    if(long && skipLongValue) {
+        console.log(`\x1b[33m${dirname}\t ${label.padEnd(10, ' ')}\t ${inputData.padEnd(20, ' ')}\x1b[0m\t`, ' skipped');
+        return;
+    }
+
+    const data = readFile(dirname, inputData);
+
+    if(data.split('\n').pop() === '') {
+        console.log(`\x1b[33mWarning, last line of input is empty !!!\x1b[0m`)
+    }
+
+    resetMemoStats();
+    const start = new Date().getTime();
+    const res = algo(data);
+    const after = new Date().getTime();
+    
+    if(JSON.stringify(res) === JSON.stringify(expected)) {
+        console.log(`\x1b[32m${dirname}\t ${label.padEnd(10, ' ')}\t ${inputData.padEnd(20, ' ')}\x1b[0m\t`, toReadableTime(after - start));
+    } else {
+        console.log(`\x1b[31m${dirname}\t ${label.padEnd(10, ' ')}\t ${inputData.padEnd(20, ' ')}\x1b[0m\t`, toReadableTime(after - start));
+        console.log('got', res)
+        console.log('expected', expected);
+    }
+}
+
+export function assertThat<U>(fn: (u: U) => boolean, msg: string) {
+    return (u: U) => {
+        if(fn(u)) {
+            return u;
+        }
+        throw msg;
+    }
+}
+
+export function assertJSONEqual(a: unknown, b: unknown) {
+    if(JSON.stringify(a) !== JSON.stringify(b)) {
+        console.log(`\x1b[31m${JSON.stringify(a)} != ${JSON.stringify(b)}\x1b[0m`);
+            throw 'Assertion error';
+    }
 }

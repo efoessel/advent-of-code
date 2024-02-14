@@ -4,18 +4,27 @@ import { Arrays } from './arrays';
 export namespace Objects {
     type O<T> = Readonly<Record<string, T>>;
     type mapFn<T, U> = (elem: T, key: string, object: O<T>) => U;
+    type reducerFn<T, U> = (acc: U, elem: T, key: string, array: O<T>) => U;
 
     export const keys = <T>(obj: O<T>) => Object.keys(obj);
     export const values = <T>(obj: O<T>) => Object.values(obj);
     export const entries = <T>(obj: O<T>) => Object.entries(obj);
     export const fromEntries = <T>(entries: readonly (readonly [string, T])[]) => Object.fromEntries(entries);
-    export const fromArray = <T>(array: T[]) => pipe(
+
+    /**
+     * Same as fromEntries, but works with entries that are not statically guaranteed to have 2 items
+     */
+    export const fromEntriesUnsafe = (entries: readonly (readonly string[])[]): Record<string, string> => Object.fromEntries(entries);
+
+    export const fromMap = <T>(map: Map<string, T>) => Object.fromEntries(map.entries());
+
+    export const fromArray = <T>(array: readonly T[]) => pipe(
         array,
         Arrays.map((e, i) => ([''+i, e] as const)),
         Objects.fromEntries
     )
 
-    export const map = <T, U>(fn: mapFn<T, U>) => (o: O<T>) => pipe(
+    export const map = <T, U>(fn: mapFn<T, U>) => (o: O<T>): { -readonly [k in keyof typeof o]: U} => pipe(
         o,
         Objects.entries,
         Arrays.map((entry) => ([entry[0], fn(entry[1], entry[0], o)] as const)),
@@ -36,34 +45,20 @@ export namespace Objects {
         Objects.fromEntries
     );
 
-    export const reduce = <T, U>(fn: (prev: U, elem: T, key: string, object: O<T>) => U, initialValue: U) => (o: O<T>) => pipe(
+    export const reduce = <T, U>(fn: reducerFn<T, U>, initialValue: U) => (o: O<T>) => pipe(
         o,
         Objects.entries,
         Arrays.reduce((prev, entry) => fn(prev, entry[1], entry[0], o), initialValue),
     );
 
-    export const groupBy = <T>(fn: mapFn<T, string>) => (obj: O<T>) => {
+    export const groupBy = <T>(keys: mapFn<T, string | string[]>) => (obj: O<T>) => {
         const output = {} as Record<string, T[]>;
-        Objects.map<T, void>((v, k) => {
-            const newK = fn(v, k, obj);
-            output[newK] = (output[newK] ?? []).concat([v]);
-        })(obj);
-        return output as O<T[]>;
-    }
-
-    export const pivot = <T, U, D extends boolean>(
-        pivotedKeys: mapFn<T, readonly string[]>,
-        pivotedValue: (pivotedKey: string, elem: T, originalKey: string, object: O<T>) => U,
-        discardUndefined: D
-    ) => {
-        return (obj: O<T>) => pipe(obj,
-            Objects.entries,
-            Arrays.pivot(
-                ([k, v]) => pivotedKeys(v, k, obj),
-                (newKey, [k, v]) => pivotedValue(newKey, v, k, obj),
-                discardUndefined
-            )
-        );
+        Objects.entries(obj).forEach(([k, v]) => {
+            const newK = keys(v, k, obj);
+            const newKs = Array.isArray(newK) ? newK : [newK];
+            newKs.forEach(k => output[k] = (output[k] ?? []).concat([v]));
+        });
+        return output;
     }
 
     export const exploreDeep = <T>(getNext: (curr: T) => T | undefined) => {
@@ -74,4 +69,11 @@ export namespace Objects {
     }
     
     export const pluck = <O extends object, K extends keyof O>(k: K) => (obj: O) => obj[k];
+
+    /**
+     * For an object of function, returns a method that will produce an object with each key being the function from the same key applied to the input
+     * apply({a: fna, b: fnb}) := (input) => {a: fna(input), b: fnb(input) }
+     */
+    export const apply = <I, T extends O<(i: I) => unknown>>(obj: T) =>
+        (input: I) => pipe(obj, map(fn => fn(input))) as {[k in keyof T]: ReturnType<T[k]>};
 }

@@ -1,7 +1,6 @@
 import { flow } from 'fp-ts/function'
-import { assert } from '../../utils/run';
-import { Arrays } from '../../utils/arrays';
-import { Vector } from '../../utils/vectors';
+import { runStep } from '../../utils/run';
+import { Arrays, Vector } from '../../utils/@index';
 
 const ROCKS = [
     [[0, 0], [1, 0], [2, 0], [3, 0]],
@@ -20,7 +19,7 @@ type State = {
 };
 
 function move(grid: TetrisArea, block: Vector[], move: Vector): [boolean, Vector[]] {
-    let newBlockMaybe = block.map(p => Vector.add(p, move));
+    const newBlockMaybe = block.map(p => Vector.add(p, move));
     if(newBlockMaybe.some(p => p[0]<0 || p[0]>6 || grid[p[0]][p[1]] === true)) {
         return [true, block];
     } else {
@@ -29,7 +28,7 @@ function move(grid: TetrisArea, block: Vector[], move: Vector): [boolean, Vector
 }
 
 const doOneBlockBuilder = (winds: string) => ({grid,topHeight,windPtr}: State, blockPtr: number) => {
-    let block = ROCKS[blockPtr].map(p => Vector.add(p, [2, topHeight + 3 + ROCK_HEIGHTS[blockPtr]]));
+    let block: Vector[] = ROCKS[blockPtr].map(p => Vector.add(p, [2, topHeight + 3 + ROCK_HEIGHTS[blockPtr]]));
     let isBlocked = false;
     while(!isBlocked) {
         const windVector = winds.at(windPtr++ % winds.length) === '<' ? [-1, 0] : [1, 0];
@@ -50,7 +49,7 @@ const algo1 = flow(
     doOneBlockBuilder,
     (doOneBlock) => {
         let state: State = {
-            grid: Arrays.range(0, 7).map((x) => Arrays.range(0, 10).map((y) => y===0)),
+            grid: Arrays.range(0, 7).map(() => Arrays.range(0, 10).map((y) => y===0)),
             topHeight: 0,
             windPtr: 0,
         }
@@ -79,7 +78,7 @@ const algo2 = (targetNbOfRounds: number, targetStablePeriods: number) => flow(
         let maxPattern = 0;
 
         let state: State = {
-            grid: Arrays.range(0, 7).map((x) => Arrays.range(0, 10).map((y) => y===0)),
+            grid: Arrays.range(0, 7).map(() => Arrays.range(0, 10).map((y) => y===0)),
             topHeight: 0,
             windPtr: 0,
         }
@@ -116,10 +115,11 @@ const algo2 = (targetNbOfRounds: number, targetStablePeriods: number) => flow(
 );
 
 
-assert(__dirname,
-    algo1,
-    // the targetStablePeriods param is a safety mechanic. Higher means algo waits more time before considering the periodic behavior is not a coincidence, but a real period.
+runStep(__dirname, 'step1', 'example', algo1, 3068);
+runStep(__dirname, 'step1', 'real', algo1, 3191);
+
+// the targetStablePeriods param is a safety mechanic. Higher means algo waits more time before considering the periodic behavior is not a coincidence, but a real period.
     // 5 seems to be enough but might not be for other input data, even with 500 it's reasonably not-too-long (~10s).
-    algo2(1000000000000, 5),
-    [3191, 1572093023267]
-);
+runStep(__dirname, 'step2', 'example', algo2(1000000000000, 5), 1514285714288);
+runStep(__dirname, 'step2', 'real', algo2(1000000000000, 5), 1572093023267);
+

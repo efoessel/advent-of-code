@@ -14,12 +14,12 @@ type MyTask<I, O> = {
     resolve: (o: O) => void,
 }
 
-export class DistributedTask<I extends any[], O> {
+export class DistributedTask<I extends unknown[], O> {
     workers: MyWorker<I, O>[] = [];
     pendingTasks: MyTask<I, O>[] = [];
 
-    constructor(workerCnt: number, private funcPath: string, process: (...i: I) => O) {
-        this.workers = Arrays.range(0, workerCnt).map(i => {
+    constructor(workerCnt: number, private funcPath: string) {
+        this.workers = Arrays.range(0, workerCnt).map(() => {
             const worker = {
                 worker: new Worker(path.join(__dirname, './distributed-worker.ts')),
                 status: 'idle' as const,
@@ -56,7 +56,7 @@ export class DistributedTask<I extends any[], O> {
         });
     }
 
-    pong(worker: MyWorker<I, O>, data: any) {
+    pong(worker: MyWorker<I, O>, data: unknown) {
         worker.status = 'idle';
         worker.currentTask?.resolve(data as O);
         worker.currentTask = undefined;

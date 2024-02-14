@@ -1,12 +1,10 @@
-import { flow, identity } from 'fp-ts/function'
-import { assert } from '../../utils/run';
-import { parseBlocks } from '../../utils/parse';
-import { Grid } from '../../utils/grid';
-import { findPath } from '../../utils/path-finder'
+import { flow, pipe } from 'fp-ts/function'
+import { runStep } from '../../utils/run';
+import { Arrays, Matrices, Strings, Vector, findTargetDistBFS } from '../../utils/@index';
 
 const parse = flow(
-    parseBlocks('\n', parseBlocks('', identity)),
-    (grid) => new Grid(grid, false)
+    Strings.split('\n'),
+    Arrays.map(Strings.split('')),
 );
 
 function getHeight(a: string): number {
@@ -17,18 +15,21 @@ function getHeight(a: string): number {
 
 const algo = (startSelector: (s: string) => boolean) => flow(
     parse,
-    (grid) => findPath(
-        grid.filter(startSelector).map(s => ({state: s, cost: 0})),
-        grid.filter(v => v === 'E'),
-        (from) => grid.getNeighbors(from.state)
-            .filter(v => getHeight(v.value) <= getHeight(from.state.value)+1)
-            .map(v => ({
-                state: v,
-                cost: from.cost + 1,
-            })),
-        (s) => `${s.x},${s.y}`
-    ),
-    (result) => result?.cost
+    (grid) => findTargetDistBFS(
+        Matrices.filterPoints(startSelector)(grid),
+        (p) => Matrices.at(grid)(p) === 'E',
+        ([fr, fc]) => pipe([fr, fc],
+            Matrices.getNeighbors(grid),
+            Arrays.filter(([r, c]) => getHeight(grid[r][c]) <= getHeight(grid[fr][fc])+1)
+        ),
+        Vector.toString
+    )
 );
 
-assert(__dirname, algo(s => s === 'S'), algo(s => s === 'S' || s === 'a'), [352, 345]);
+const algo1 = algo(s => s === 'S');
+const algo2 = algo(s => s === 'S' || s === 'a');
+
+runStep(__dirname, 'step1', 'example', algo1, 31);
+runStep(__dirname, 'step1', 'real', algo1, 352);
+runStep(__dirname, 'step2', 'example', algo2, 29);
+runStep(__dirname, 'step2', 'real', algo2, 345);

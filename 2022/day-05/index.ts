@@ -1,7 +1,6 @@
 import { flow, identity } from 'fp-ts/function'
-import { assert } from '../../utils/run';
-import { parseBlocks } from '../../utils/parse';
-import { Arrays } from '../../utils/arrays';
+import { runStep } from '../../utils/run';
+import { Arrays, Mapper, parseBlocks } from '../../utils/@index';
 
 type Stacks = string[][];
 type Move = {
@@ -13,7 +12,7 @@ type Move = {
 const parseStacks = flow(
     (text: string) => text.split('\n').reverse().slice(1),
     Arrays.reduce(flow(
-        (stacks: Stacks, line: string) => Arrays.zipW(line.match(/.{3} ?/g)!, stacks),
+        (stacks: Stacks, line: string) => Arrays.zipW([line.match(/.{3} ?/g)!, stacks]),
         Arrays.map(([crate, stack]) => ([crate || '', stack || []] as const)),
         Arrays.map(([crate, stack]) => crate.trim() === '' ? stack : [...stack, crate.charAt(1)])
     ), [] as Stacks)
@@ -35,26 +34,26 @@ const parse = flow(
     ] as const)
 );
 
-const applyMoveStep = (transformOnMove: (moved: string[]) => string[]) => (stacks: Stacks, move: Move) => stacks.map(
-    (stack, index) => index === move.from
-        ? stack.slice(0, -move.nb)
-        : index === move.to
-            ? transformOnMove(stack.concat(stacks[move.from].slice(-move.nb)))
-            : stack
-);
-
 const readResult = (stacks: Stacks) => stacks.map((stack) => stack.length === 0 ? '*' : stack[stack.length-1]).join('');
 
-const algo1 = flow(
+const algo = (craneMover: Mapper<string[], string[]>) => flow(
     parse,
-    ([stacks, moves]) => moves.reduce(applyMoveStep(arr => arr.reverse()), stacks),
+    ([stacks, moves]) => moves.reduce(
+        (stacks: Stacks, move: Move) => stacks.map(
+            (stack, index) => index === move.from
+                ? stack.slice(0, -move.nb)
+                : index === move.to
+                    ? stack.concat(craneMover(stacks[move.from].slice(-move.nb)))
+                    : stack
+        ),
+        stacks),
     readResult,
 )
 
-const algo2 = flow(
-    parse,
-    ([stacks, moves]) => moves.reduce(applyMoveStep(identity), stacks),
-    readResult,
-)
+const algo1 = algo(Arrays.reverse);
+const algo2 = algo(identity);
 
-assert(__dirname, algo1, algo2, ['QDPFNRZHF', 'MGDMPSZTM']);
+runStep(__dirname, 'step1', 'example', algo1, 'CMZ');
+runStep(__dirname, 'step1', 'real', algo1, 'QGTHFZBHV');
+runStep(__dirname, 'step2', 'example', algo2, 'MCD');
+runStep(__dirname, 'step2', 'real', algo2, 'MGDMPSZTM');

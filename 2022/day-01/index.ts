@@ -1,18 +1,25 @@
-import { flow } from 'fp-ts/function';
-import { Arrays } from '../../utils/arrays';
-import { basicParseInt, parseBlocks } from '../../utils/parse';
-import { assert } from '../../utils/run';
+import { flow, identity } from 'fp-ts/function';
+import { runStep } from '../../utils/run';
+import { Arrays, basicParseInt, parseBlocks } from '../../utils/@index';
 
 const parse = parseBlocks('\n\n', parseBlocks('\n', basicParseInt));
 
-const base = flow(
+const algo1 = flow(
     parse,
     Arrays.map(Arrays.sum),
-    arr => arr.sort((a, b) => b-a)
+    Arrays.sortNumbers('DESC', identity),
+    Arrays.at(0)
 )
 
-assert(__dirname,
-    (l) => base(l)[0],
-    (l) => Arrays.sum(base(l).slice(0, 3)),
-    [68802, 205370]
-);
+const algo2 = flow(
+    parse,
+    Arrays.map(Arrays.sum),
+    Arrays.sortNumbers('DESC', identity),
+    Arrays.slice(0, 3),
+    Arrays.sum
+)
+
+runStep(__dirname, 'step1', 'example', algo1, 24000);
+runStep(__dirname, 'step1', 'real', algo1, 68802);
+runStep(__dirname, 'step2', 'example', algo2, 45000);
+runStep(__dirname, 'step2', 'real', algo2, 205370);

@@ -1,8 +1,6 @@
-import { flow, identity } from 'fp-ts/function';
-import { Arrays } from '../../utils/arrays';
-import { parseBlocks } from '../../utils/parse';
-import { assert } from '../../utils/run';
-import { strings } from '../../utils/strings';
+import { flow, identity } from 'fp-ts/function'
+import { runStep } from '../../utils/run';
+import { Arrays, Strings, parseBlocks } from '../../utils/@index';
 
 
 function getPriority(char: string) {
@@ -10,21 +8,29 @@ function getPriority(char: string) {
     else return char.charCodeAt(0) - 76 + 38;
 }
 
-const splitInHalves = (l: string) => ([l.substring(0, l.length / 2).split(''), l.substring(l.length / 2).split('')])
-
 const algo1 = flow(
-    parseBlocks('\n', splitInHalves),
-    Arrays.map((halves) => Arrays.intersection(halves)[0]),
-    Arrays.map(getPriority),
+    parseBlocks('\n', identity),
+    Arrays.map(flow(
+        Strings.splitIn(2),
+        Strings.intersection,
+        Arrays.atUnsafe(0),
+        getPriority
+    )),
     Arrays.sum
-)
+);
 
 const algo2 = flow(
     parseBlocks('\n', identity),
     Arrays.groupByAsArray((_, i) => Math.floor(i/3)),
-    Arrays.map((bags) => strings.intersection(bags)[0]),
-    Arrays.map(getPriority),
+    Arrays.map(flow(
+        Strings.intersection,
+        Arrays.atUnsafe(0),
+        getPriority
+    )),
     Arrays.sum
-)
+);
 
-assert(__dirname, algo1, algo2, [8139, 2668]);
+runStep(__dirname, 'step1', 'example', algo1, 157);
+runStep(__dirname, 'step1', 'real', algo1, 8139);
+runStep(__dirname, 'step2', 'example', algo2, 70);
+runStep(__dirname, 'step2', 'real', algo2, 2668);

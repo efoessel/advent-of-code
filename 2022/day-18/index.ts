@@ -1,9 +1,6 @@
 import { flow, pipe } from 'fp-ts/function'
-import { assert } from '../../utils/run';
-import { parseBlocks, Parse } from '../../utils/parse';
-import { Arrays } from '../../utils/arrays';
-import { Vector } from '../../utils/vectors';
-import { findReachableNodes } from '../../utils/path-finder';
+import { runStep } from '../../utils/run';
+import { Arrays, Parse, Vector, findReachableNodes, parseBlocks } from '../../utils/@index';
 
 const parse = flow(
     parseBlocks('\n', Parse.extractIntArray),
@@ -51,4 +48,7 @@ const algo2 = flow(
     },
 );
 
-assert(__dirname, algo1, algo2, [3432, 2042]);
+runStep(__dirname, 'step1', 'example', algo1, 64);
+runStep(__dirname, 'step1', 'real', algo1, 3432);
+runStep(__dirname, 'step2', 'example', algo2, 58);
+runStep(__dirname, 'step2', 'real', algo2, 2042);

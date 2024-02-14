@@ -1,8 +1,6 @@
 import { flow, pipe } from 'fp-ts/function'
-import { assert } from '../../utils/run';
-import { Parse, parseBlocks } from '../../utils/parse';
-import { Arrays } from '../../utils/arrays';
-import { Vector } from '../../utils/vectors';
+import { runStep } from '../../utils/run';
+import { Arrays, Vector, Parse, parseBlocks } from '../../utils/@index';
 
 
 const parse = flow(
@@ -69,21 +67,23 @@ function findReachable(blocked: Set<string>, maxY: number, start: Vector) {
         const nextLine = pipe(
             xs,
             Arrays.flatMap(x => ([x-1, x, x+1])),
-            Arrays.asSet(),
+            Arrays.asSet,
             Arrays.filter(x => !blocked.has([x, y+1].toString()))
         );
         return nextLine.length + findReachableInternal(y+1, nextLine);
     }
-    
+
     return findReachableInternal(start[1], [start[0]]) + 1;
 }
 
 const algo2 = flow(
     parse,
-    ({maxY, blocked}) => {
-        const tmp = findReachable(blocked, maxY, [500, 0]);
-        return tmp;
-    }
+    ({maxY, blocked}) => findReachable(blocked, maxY, [500, 0]),
 );
 
-assert(__dirname, algo1, algo2, [843, 27625]);
+runStep(__dirname, 'step1', 'example', algo1, 24);
+runStep(__dirname, 'step1', 'real', algo1, 843);
+runStep(__dirname, 'step2', 'example', algo2, 93);
+runStep(__dirname, 'step2', 'real', algo2, 27625);
+
+// import './naive'

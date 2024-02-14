@@ -1,9 +1,6 @@
 import { flow, identity } from 'fp-ts/function'
-import { assert } from '../../utils/run';
-import { Parse, parseBlocks } from '../../utils/parse';
-import { Arrays } from '../../utils/arrays';
-import { Arithmetics } from '../../utils/arithmetics';
-import { Sequence } from '../../utils/sequence';
+import { runStep } from '../../utils/run';
+import { Arithmetics, Arrays, Parse, Stream, parseBlocks } from '../../utils/@index';
 
 type Monkey = {
     id: number,
@@ -30,17 +27,17 @@ const parseOperation = (str: string) => {
 }
 
 const parse = flow(
-    parseBlocks('\n\n', (block) => {
+    parseBlocks('\n\n', (block): Monkey => {
         const lines = block.split('\n');
         return {
             id: Parse.extractInt(lines[0]),
             items: Parse.extractIntArray(lines[1]),
-            operation: parseOperation(Parse.extractRegexp(/  Operation: new = (.*)/)(lines[2])),
+            operation: parseOperation(Parse.extractRegexp(/ {2}Operation: new = (.*)/)(lines[2])),
             divisibleBy: Parse.extractInt(lines[3]),
             ifTrue: Parse.extractInt(lines[4]),
             ifFalse: Parse.extractInt(lines[5]),
             cnt: 0,
-        } as Monkey;
+        };
     }),
 );
 
@@ -51,7 +48,7 @@ const algo = (rounds: number, reliefMethodBuilder: (monkeys: Monkey[]) => ((worr
         const allItems = monkeys.flatMap((m, monkeyId) => m.items.map(item => ({monkeyId, item})));
 
         return allItems.reduce((monkeyCnt, {monkeyId, item}) => {
-            return Sequence.loop().reduceUntil(({loopCnt}) => loopCnt>=rounds, ({monkeyCnt, monkeyId, item, loopCnt}) => {
+            return Stream.loopUntil(({loopCnt}) => loopCnt>=rounds, ({monkeyCnt, monkeyId, item, loopCnt}) => {
                 const currentMonkey = monkeys[monkeyId];
                 const newWorry = reliefMethod(currentMonkey.operation(item));
                 const newMonkeyId = newWorry % currentMonkey.divisibleBy === 0 ? currentMonkey.ifTrue : currentMonkey.ifFalse;
@@ -68,11 +65,13 @@ const algo = (rounds: number, reliefMethodBuilder: (monkeys: Monkey[]) => ((worr
     (arr) => arr[0]*arr[1]
 );
 
-assert(__dirname,
-    algo(20, () => (worry) => Math.floor(worry/3)),
-    algo(10000, (monkeys) => {
-        const lcm = Arithmetics.lcm(...monkeys.map(m => m.divisibleBy));
-        return (worry) => worry % lcm;
-    }),
-    [99852, 25935263541]
-);
+const algo1 = algo(20, () => (worry) => Math.floor(worry/3));
+const algo2 = algo(10000, (monkeys) => {
+    const lcm = Arithmetics.lcm(...monkeys.map(m => m.divisibleBy));
+    return (worry) => worry % lcm;
+});
+
+runStep(__dirname, 'step1', 'example', algo1, 10605);
+runStep(__dirname, 'step1', 'real', algo1, 99852);
+runStep(__dirname, 'step2', 'example', algo2, 2713310158);
+runStep(__dirname, 'step2', 'real', algo2, 25935263541);

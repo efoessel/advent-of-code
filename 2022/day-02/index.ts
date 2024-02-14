@@ -1,7 +1,6 @@
-import { flow } from 'fp-ts/function';
-import { Arrays } from '../../utils/arrays';
-import { castTo, parseBlocks } from '../../utils/parse';
-import { assert } from '../../utils/run';
+import { flow } from 'fp-ts/function'
+import { runStep } from '../../utils/run';
+import { Arrays, castTo, parseBlocks } from '../../utils/@index';
 
 type Round = `${'A'|'B'|'C'} ${'X'|'Y'|'Z'}`
 type ScoreMap = Record<Round, number>
@@ -36,4 +35,7 @@ const algo = (scoreMap: ScoreMap) => flow(
     Arrays.sum
 )
 
-assert(__dirname, algo(toScore), algo(toScore2), [12794, 14979]);
+runStep(__dirname, 'step1', 'example', algo(toScore), 15);
+runStep(__dirname, 'step1', 'real', algo(toScore), 12794);
+runStep(__dirname, 'step2', 'example', algo(toScore2), 12);
+runStep(__dirname, 'step2', 'real', algo(toScore2), 14979);

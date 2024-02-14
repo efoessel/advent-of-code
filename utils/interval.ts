@@ -1,56 +1,38 @@
+import { pipe } from 'fp-ts/lib/function';
 import { Arrays } from './arrays';
 
-export class Interval {
-    public readonly from: number;
-    public readonly to: number;
+export type Interval = {from: number, to: number};
 
-    // always from <= to
-    constructor(
-        from: number,
-        to: number,
-    ) {
-        this.from = Math.min(from, to);
-        this.to = Math.max(from, to);
-    }
+export namespace Intervals {
+    export const ALL = {from: -Infinity, to: Infinity};
+    export const from = (a: number, b: number): Interval => ({from: Math.min(a, b), to: Math.max(a, b)});
+    export const fromIntegersIncluded = (a: number, b: number): Interval => ({from: Math.min(a, b), to: Math.max(a, b) + 1});
 
-    get length() {
-        return this.to - this.from + 1;
-    }
+    export const length = (i: Interval) => i.to - i.from;
 
-    contains(val: number) {
-        return this.from <= val && this.to >= val;
-    }
+    export const includes = (n: number) => (i: Interval) => i.from <= n && i.to > n;
+    export const includedIn = (i: Interval) => (n: number) => i.from <= n && i.to > n;
 
-    containedIn(other: Interval) {
-        return this.from >= other.from && this.to <= other.to;
-    }
+    export const contains = (c: Interval) => (i: Interval) => i.from <= c.from && i.to >= c.to;
+    export const containedIn = (i: Interval) => (c: Interval) => i.from <= c.from && i.to >= c.to;
 
-    overlaps(other: Interval) {
-        return this.intersection(other) !== undefined;
+    export const intersection = (...i: Interval[]): Interval | undefined => {
+        const newFrom = i.reduce((max, x) => Math.max(max, x.from), -Infinity);
+        const newTo = i.reduce((min, x) => Math.min(min, x.to), Infinity);
+        if(newFrom >= newTo) return undefined;
+        else return {from: newFrom, to: newTo};
     }
+    export const intersects = (i1: Interval) => (i2: Interval) => Math.max(i1.from, i2.from) < Math.min(i1.to, i2.to);
+    export const intersectionWith = (i1: Interval) => (i2: Interval) => intersection(i1, i2);
 
-    intersection(range: Interval) {
-        const newFrom = Math.max(this.from, range.from);
-        const newTo = Math.min(this.to, range.to);
-        if(newFrom > newTo) return undefined;
-        else return new Interval(newFrom, newTo);
-    }
+    export const exclude = (from: Interval, removed: Interval) => pipe(
+        [ Intervals.from(-Infinity, removed.from), Intervals.from(removed.to, Infinity) ],
+        Arrays.map(i => intersection(i, from)),
+        Arrays.filterNullable
+    );
 
-    exclude(range: Interval) {
-        const reverse = [
-            new Interval(-Infinity, range.from - 1),
-            new Interval(range.to+1, Infinity),
-        ]
-        return Arrays.filterUndef(reverse.map(r => r.intersection(this)));
-    }
+    export const toString = (i: Interval) => i.from + '..' + i.to;
 
-    toString() {
-        return this.from + '..' + this.to;
-    }
-
-    equals(other: unknown) {
-        return other instanceof Interval
-            && this.from === other.from
-            && this.to === other.to
-    }
+    export const equals = (a: Interval, b: Interval) => a.from===b.from && a.to===b.to;
+    export const eq = (a: Interval) => (b: Interval) => a.from===b.from && a.to===b.to;
 }

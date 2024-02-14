@@ -1,8 +1,6 @@
 import { flow, identity } from 'fp-ts/function'
-import { assert } from '../../utils/run';
-import { parseBlocks } from '../../utils/parse';
-import { Arrays } from '../../utils/arrays';
-import { Vector } from '../../utils/vectors';
+import { runStep } from '../../utils/run';
+import { Arrays, parseBlocks, Vector } from '../../utils/@index';
 
 type Dir = 'R'|'L'|'U'|'D';
 
@@ -15,7 +13,7 @@ const parse = flow(
 );
 
 const buildInitialState = (length: number) => ({
-    rope: Arrays.range(0, length).map(() => Vector.zero(2)),
+    rope: Arrays.range(0, length).map(() => Vector.zero(2)) as Vector[],
     visited: [] as Vector[],
 });
 
@@ -53,4 +51,7 @@ const algo = (length: number) => flow(
     }
 );
 
-assert(__dirname, algo(2), algo(10), [6018, 2619]);
+runStep(__dirname, 'step1', 'example1', algo(2), 13);
+runStep(__dirname, 'step1', 'real', algo(2), 6018);
+runStep(__dirname, 'step2', 'example2', algo(10), 36);
+runStep(__dirname, 'step2', 'real', algo(10), 2619);

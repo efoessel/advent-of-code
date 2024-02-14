@@ -23,10 +23,10 @@ export namespace Parse {
         }
     }
     
-    export const extractIntArray = (x: string) => {
+    export const extractIntArray = (x: string): number[] => {
         const found = x.match(/(-?\d+)/g);
         if(found === null) {
-            throw new Error('Unable to extract integer array from '+x);
+            return [];
         } else {
             return found.map(basicParseInt);
         }

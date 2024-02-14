@@ -1,8 +1,6 @@
 import { flow, identity, pipe } from 'fp-ts/function'
-import { assert } from '../../utils/run';
-import { parseBlocks } from '../../utils/parse';
-import { Arrays } from '../../utils/arrays';
-import { Objects } from '../../utils/objects';
+import { runStep } from '../../utils/run';
+import { Arrays, Objects, parseBlocks } from '../../utils/@index';
 
 type State = {
     files: Record<string, number>;
@@ -37,7 +35,7 @@ function addToState(state: State, line: string): State {
             dirs: [...state.dirs, fullPath(line.substring(4))],
         }
     } else { // it's a file
-        const [_, size, fileName] = line.match(/(\d+) (.+)/)!;
+        const [, size, fileName] = line.match(/(\d+) (.+)/)!;
         return {
             ...state,
             files: {
@@ -79,4 +77,7 @@ const algo2 = flow(
     }
 );
 
-assert(__dirname, algo1, algo2, [1517599, 2481982]);
+runStep(__dirname, 'step1', 'example', algo1, 95437);
+runStep(__dirname, 'step1', 'real', algo1, 1517599);
+runStep(__dirname, 'step2', 'example', algo2, 24933642);
+runStep(__dirname, 'step2', 'real', algo2, 2481982);
